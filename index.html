@@ -1,0 +1,1128 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="text-scale" content="scale">
+  <meta name="theme-color" content="#FFFCF6">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="旅遊書架">
+  <title>旅の手帳｜個人離線旅遊書架</title>
+
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="icon" href="./icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="./icon-180.png">
+
+  <!-- 載入 Google Fonts Huninn（由 sw.js 懶快取） -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Huninn&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg-paper: #FFFCF6;
+      --bg-card: #FFFFFF;
+      --bg-beige: #F7F1E3;
+      --ink: #4E3A39;
+      --ink-muted: #7A6361;
+
+      --coral: #F2A497;
+      --yamabuki: #F6D27A;
+      --mizuiro: #A8D3E6;
+      --wakatake: #B9DAA5;
+
+      --border-w: 3px;
+      --radius-card: 24px;
+      --radius-pill: 999px;
+      --shadow-flat: 0 4px 0 var(--ink);
+      --shadow-flat-sm: 0 2px 0 var(--ink);
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    /* html 不覆寫 font-size，支援動態縮放 */
+    body {
+      margin: 0;
+      font-family: "Huninn", "Hiragino Maru Gothic ProN", "Yu Gothic UI", "PingFang TC", "Microsoft JhengHei", system-ui, -apple-system, sans-serif;
+      font-size: 16px;
+      line-height: 1.55;
+      background-color: var(--bg-paper);
+      color: var(--ink);
+      min-height: 100dvh;
+      padding-top: env(safe-area-inset-top);
+      padding-bottom: calc(28px + env(safe-area-inset-bottom));
+    }
+
+    .container {
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 14px 16px 24px;
+    }
+
+    /* Header */
+    .app-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      background-color: var(--bg-beige);
+      border: var(--border-w) solid var(--ink);
+      border-radius: var(--radius-pill);
+      box-shadow: var(--shadow-flat-sm);
+      white-space: nowrap;
+    }
+
+    .status-pill.ready {
+      background-color: var(--wakatake);
+    }
+
+    /* 通用繪本風按鈕 */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      font-family: inherit;
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--ink);
+      background-color: var(--yamabuki);
+      border: var(--border-w) solid var(--ink);
+      border-radius: var(--radius-pill);
+      padding: 9px 16px;
+      box-shadow: var(--shadow-flat);
+      cursor: pointer;
+      transition: transform 0.08s ease, box-shadow 0.08s ease;
+      text-decoration: none;
+    }
+
+    .btn:active {
+      transform: translateY(3px);
+      box-shadow: 0 1px 0 var(--ink);
+    }
+
+    .btn-secondary {
+      background-color: var(--bg-card);
+    }
+
+    .btn-danger {
+      background-color: var(--coral);
+    }
+
+    .btn-sm {
+      padding: 6px 12px;
+      font-size: 0.85rem;
+      box-shadow: var(--shadow-flat-sm);
+    }
+
+    /* 主標題區塊 */
+    .hero-banner {
+      background-color: var(--bg-beige);
+      border: var(--border-w) solid var(--ink);
+      border-radius: var(--radius-card);
+      padding: 16px 18px;
+      margin-bottom: 18px;
+      box-shadow: var(--shadow-flat);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .hero-title {
+      margin: 0 0 4px;
+      font-size: 1.35rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+
+    .hero-sub {
+      margin: 0;
+      font-size: 0.88rem;
+      color: var(--ink-muted);
+    }
+
+    /* iOS 加入主畫面教學卡 */
+    .install-guide {
+      position: relative;
+      background-color: var(--bg-card);
+      border: var(--border-w) solid var(--ink);
+      border-radius: var(--radius-card);
+      padding: 14px 40px 14px 16px;
+      margin-bottom: 18px;
+      box-shadow: var(--shadow-flat);
+      font-size: 0.9rem;
+    }
+
+    .install-guide[hidden] {
+      display: none;
+    }
+
+    .install-guide-title {
+      font-weight: 700;
+      margin: 0 0 4px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .install-guide p {
+      margin: 0;
+      color: var(--ink-muted);
+      font-size: 0.85rem;
+    }
+
+    .install-close {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      width: 28px;
+      height: 28px;
+      border-radius: var(--radius-pill);
+      border: 2px solid var(--ink);
+      background: var(--bg-beige);
+      color: var(--ink);
+      font-weight: 700;
+      cursor: pointer;
+      display: grid;
+      place-items: center;
+      padding: 0;
+    }
+
+    /* 書架網格 */
+    .shelf-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      padding: 0 4px;
+    }
+
+    .shelf-count {
+      font-size: 0.92rem;
+      font-weight: 700;
+    }
+
+    .book-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+    }
+
+    @media (min-width: 560px) {
+      .book-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    /* 書卡 */
+    .book-card {
+      background-color: var(--bg-card);
+      border: var(--border-w) solid var(--ink);
+      border-radius: var(--radius-card);
+      box-shadow: var(--shadow-flat);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.1s ease;
+    }
+
+    .book-ribbon {
+      padding: 10px 16px;
+      border-bottom: var(--border-w) solid var(--ink);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      font-weight: 700;
+      font-size: 0.88rem;
+    }
+
+    .theme-green .book-ribbon { background-color: var(--wakatake); }
+    .theme-blue .book-ribbon { background-color: var(--mizuiro); }
+    .theme-pink .book-ribbon { background-color: var(--coral); }
+    .theme-yellow .book-ribbon { background-color: var(--yamabuki); }
+
+    .countdown-badge {
+      background-color: var(--bg-card);
+      border: 2px solid var(--ink);
+      border-radius: var(--radius-pill);
+      padding: 2px 10px;
+      font-size: 0.8rem;
+      white-space: nowrap;
+    }
+
+    .book-body {
+      padding: 14px 16px 16px;
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      gap: 8px;
+    }
+
+    .book-title {
+      margin: 0;
+      font-size: 1.12rem;
+      font-weight: 700;
+      line-height: 1.35;
+      word-break: break-word;
+    }
+
+    .book-meta {
+      font-size: 0.82rem;
+      color: var(--ink-muted);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .book-summary {
+      margin: 0;
+      font-size: 0.9rem;
+      color: var(--ink-muted);
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      flex: 1;
+    }
+
+    .book-actions {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-top: 8px;
+      padding-top: 10px;
+      border-top: 2px dashed #D8CEC4;
+    }
+
+    .book-actions .btn-read {
+      flex: 1;
+    }
+
+    /* 空書架繪本插圖區 */
+    .empty-state {
+      background-color: var(--bg-card);
+      border: var(--border-w) solid var(--ink);
+      border-radius: var(--radius-card);
+      padding: 24px 18px 28px;
+      text-align: center;
+      box-shadow: var(--shadow-flat);
+    }
+
+    .empty-state[hidden] {
+      display: none;
+    }
+
+    .empty-illustration {
+      width: 100%;
+      max-width: 280px;
+      height: auto;
+      margin: 0 auto 12px;
+      display: block;
+    }
+
+    @keyframes gentleFloat {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-5px); }
+    }
+
+    .anim-float {
+      animation: gentleFloat 4s ease-in-out infinite;
+    }
+
+    .anim-float-delay {
+      animation: gentleFloat 4.6s ease-in-out 1.2s infinite;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .anim-float,
+      .anim-float-delay {
+        animation: none !important;
+      }
+    }
+
+    .empty-title {
+      margin: 0 0 6px;
+      font-size: 1.15rem;
+      font-weight: 700;
+    }
+
+    .empty-desc {
+      margin: 0 0 18px;
+      font-size: 0.9rem;
+      color: var(--ink-muted);
+    }
+
+    /* 底部折疊式離線保護狀態 */
+    .diagnostics {
+      margin-top: 26px;
+      background-color: var(--bg-beige);
+      border: var(--border-w) solid var(--ink);
+      border-radius: var(--radius-card);
+      box-shadow: var(--shadow-flat);
+      overflow: hidden;
+    }
+
+    .diagnostics summary {
+      padding: 12px 16px;
+      font-weight: 700;
+      font-size: 0.92rem;
+      cursor: pointer;
+      list-style: none;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .diagnostics summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .diagnostics-body {
+      padding: 0 16px 16px;
+      font-size: 0.85rem;
+      border-top: 2px solid var(--ink);
+      padding-top: 12px;
+    }
+
+    .diag-list {
+      margin: 0 0 10px;
+      padding-left: 18px;
+    }
+
+    .diag-list li {
+      margin-bottom: 4px;
+    }
+
+    /* 原生 <dialog> 刪除確認視窗 */
+    dialog.confirm-dialog {
+      border: var(--border-w) solid var(--ink);
+      border-radius: var(--radius-card);
+      background-color: var(--bg-paper);
+      color: var(--ink);
+      padding: 20px;
+      max-width: 340px;
+      width: calc(100% - 32px);
+      box-shadow: 0 6px 0 var(--ink);
+    }
+
+    dialog.confirm-dialog::backdrop {
+      background: rgba(78, 58, 57, 0.45);
+    }
+
+    .dialog-title {
+      margin: 0 0 8px;
+      font-size: 1.12rem;
+      font-weight: 700;
+    }
+
+    .dialog-text {
+      margin: 0 0 18px;
+      font-size: 0.9rem;
+      color: var(--ink-muted);
+    }
+
+    .dialog-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    /* 全螢幕離線閱讀器 */
+    .reader-overlay {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100dvh;
+      background-color: var(--bg-paper);
+      padding-top: env(safe-area-inset-top);
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .reader-overlay[hidden] {
+      display: none;
+    }
+
+    .reader-frame {
+      width: 100%;
+      height: 100%;
+      border: none;
+      background-color: #FFFFFF;
+      flex: 1;
+    }
+
+    .back-to-shelf-btn {
+      position: fixed;
+      right: 16px;
+      bottom: calc(16px + env(safe-area-inset-bottom));
+      z-index: 10000;
+      background-color: var(--yamabuki);
+      color: var(--ink);
+      border: var(--border-w) solid var(--ink);
+      border-radius: var(--radius-pill);
+      padding: 10px 18px;
+      font-family: inherit;
+      font-size: 0.95rem;
+      font-weight: 700;
+      box-shadow: var(--shadow-flat);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .back-to-shelf-btn:active {
+      transform: translateY(3px);
+      box-shadow: 0 1px 0 var(--ink);
+    }
+
+    /* Toast 提示 */
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: calc(24px + env(safe-area-inset-bottom));
+      transform: translateX(-50%);
+      background-color: var(--ink);
+      color: var(--bg-paper);
+      padding: 10px 18px;
+      border-radius: var(--radius-pill);
+      font-size: 0.88rem;
+      font-weight: 700;
+      z-index: 8000;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.2s ease;
+      white-space: nowrap;
+    }
+
+    .toast.show {
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- 頂部狀態與匯入按鈕 -->
+    <header class="app-header">
+      <div id="swStatusPill" class="status-pill" aria-live="polite">
+        ⏳ 離線引擎準備中...
+      </div>
+      <label class="btn" for="fileInput">
+        <span>＋ 匯入手冊</span>
+      </label>
+      <input
+        id="fileInput"
+        type="file"
+        accept=".html,.htm,text/html"
+        multiple
+        hidden
+      >
+    </header>
+
+    <!-- 繪本風標題橫幅 -->
+    <section class="hero-banner">
+      <div>
+        <h1 class="hero-title">旅の手帳・離線書架</h1>
+        <p class="hero-sub">純本機保存，飛航模式也能隨時翻閱行程</p>
+      </div>
+      <div style="font-size: 2rem;" aria-hidden="true">🧳</div>
+    </section>
+
+    <!-- iPhone Safari 加入主畫面引導卡 -->
+    <aside id="installGuide" class="install-guide" hidden>
+      <button id="closeInstallGuide" class="install-close" type="button" aria-label="關閉教學提示">✕</button>
+      <p class="install-guide-title">📲 將旅遊書架加到 iPhone 主畫面</p>
+      <p>點擊 Safari 下方工具列的「分享 <span aria-hidden="true">⍗</span>」按鈕，選擇<strong>「加入主畫面」</strong>，即可獲得全螢幕 App 體驗並強化離線保存！</p>
+    </aside>
+
+    <!-- 書架統計列 -->
+    <div id="shelfHeader" class="shelf-header" hidden>
+      <span id="shelfCount" class="shelf-count">共 0 本旅遊手冊</span>
+      <span style="font-size: 0.8rem; color: var(--ink-muted);">依出發日自動排序</span>
+    </div>
+
+    <!-- 空書架狀態（含日系手繪風 SVG 插圖） -->
+    <section id="emptyState" class="empty-state">
+      <svg class="empty-illustration" viewBox="0 0 320 210" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="陽光與草地上的木頭書架，擺放著三本粉彩旅遊手帳">
+        <!-- 天空背景圓框 -->
+        <rect x="6" y="6" width="308" height="198" rx="22" fill="#EAF6FB" stroke="#4E3A39" stroke-width="3"/>
+        
+        <!-- 太陽 -->
+        <g class="anim-float">
+          <circle cx="66" cy="54" r="20" fill="#F6D27A" stroke="#4E3A39" stroke-width="3"/>
+          <path d="M66 24V29M66 79V84M36 54H41M91 54H96M45 33L49 37M83 71L87 75M87 33L83 37M49 71L45 75" stroke="#4E3A39" stroke-width="3" stroke-linecap="round"/>
+        </g>
+
+        <!-- 白雲 -->
+        <g class="anim-float-delay">
+          <path d="M204 58H264C271.732 58 278 51.732 278 44C278 36.688 272.393 30.684 265.238 30.055C262.458 20.761 253.837 14 243.6 14C231.958 14 222.371 22.747 221.138 34.035C219.832 33.375 218.358 33 216.8 33C211.498 33 207.2 37.298 207.2 42.6C207.2 43.196 207.254 43.779 207.358 44.345C201.954 45.286 198 49.992 198 55.6C198 56.425 198.086 57.23 198.25 58H204Z" fill="#FFFFFF" stroke="#4E3A39" stroke-width="3" stroke-linejoin="round"/>
+        </g>
+
+        <!-- 遠方綠草坡 -->
+        <path d="M6 154C75 132 155 136 225 148C262 154 292 150 314 144V182C314 194.15 304.15 204 292 204H28C15.85 204 6 194.15 6 182V154Z" fill="#B9DAA5" stroke="#4E3A39" stroke-width="3"/>
+
+        <!-- 小草裝飾 -->
+        <path d="M44 176L41 168M44 176L48 169M274 174L271 166M274 174L278 167" stroke="#4E3A39" stroke-width="2.5" stroke-linecap="round"/>
+
+        <!-- 木頭書架底座與背板 -->
+        <rect x="86" y="156" width="148" height="14" rx="6" fill="#E3B787" stroke="#4E3A39" stroke-width="3"/>
+        <rect x="98" y="170" width="14" height="14" rx="4" fill="#C99663" stroke="#4E3A39" stroke-width="3"/>
+        <rect x="208" y="170" width="14" height="14" rx="4" fill="#C99663" stroke="#4E3A39" stroke-width="3"/>
+
+        <!-- 第一本手帳：珊瑚粉 -->
+        <g transform="rotate(-4 118 122)">
+          <rect x="102" y="84" width="32" height="72" rx="6" fill="#F2A497" stroke="#4E3A39" stroke-width="3"/>
+          <rect x="108" y="96" width="20" height="14" rx="3" fill="#FFFCF6" stroke="#4E3A39" stroke-width="2"/>
+          <line x1="109" y1="142" x2="127" y2="142" stroke="#4E3A39" stroke-width="2.5" stroke-linecap="round"/>
+        </g>
+
+        <!-- 第二本手帳：山吹黃 -->
+        <rect x="142" y="78" width="34" height="78" rx="6" fill="#F6D27A" stroke="#4E3A39" stroke-width="3"/>
+        <circle cx="159" cy="104" r="7" fill="#FFFCF6" stroke="#4E3A39" stroke-width="2"/>
+        <line x1="149" y1="142" x2="169" y2="142" stroke="#4E3A39" stroke-width="2.5" stroke-linecap="round"/>
+
+        <!-- 第三本手帳：水色 -->
+        <g transform="rotate(5 198 122)">
+          <rect x="182" y="86" width="32" height="70" rx="6" fill="#A8D3E6" stroke="#4E3A39" stroke-width="3"/>
+          <rect x="188" y="98" width="20" height="12" rx="3" fill="#FFFCF6" stroke="#4E3A39" stroke-width="2"/>
+          <line x1="189" y1="142" x2="207" y2="142" stroke="#4E3A39" stroke-width="2.5" stroke-linecap="round"/>
+        </g>
+      </svg>
+
+      <h2 class="empty-title">書架還是空的呢！</h2>
+      <p class="empty-desc">選擇你製作好的單檔 HTML 旅遊手冊，<br>匯入後就能在無網路環境下隨時開啟。</p>
+      <label class="btn" for="fileInput">
+        <span>📂 選擇 HTML 手冊匯入</span>
+      </label>
+    </section>
+
+    <!-- 書卡列表 -->
+    <main id="bookGrid" class="book-grid" aria-live="polite"></main>
+
+    <!-- 底部折疊式本機離線保護狀態 -->
+    <details id="offlineDetails" class="diagnostics">
+      <summary>
+        <span>🛡️ 本機離線保護與儲存狀態</span>
+        <span aria-hidden="true">▾</span>
+      </summary>
+      <div class="diagnostics-body">
+        <ul class="diag-list">
+          <li><strong>Service Worker 狀態：</strong><span id="diagSw">檢查中...</span></li>
+          <li><strong>瀏覽器持久化儲存 (Storage Persist)：</strong><span id="diagPersist">檢查中...</span></li>
+          <li><strong>已保存手冊數量：</strong><span id="diagCount">0 本</span></li>
+        </ul>
+        <p style="margin: 0; color: var(--ink-muted);">
+          <strong>✈️ 飛航模式測試說明：</strong>確認上方顯示「✅ 已離線就緒」並至少匯入一本手冊後，可開啟手機飛航模式並完全關閉 Safari 再重新開啟，點擊任一本書卡即可驗證 100% 離線執行與勾選記憶功能。
+        </p>
+      </div>
+    </details>
+  </div>
+
+  <!-- 原生 <dialog> 刪除確認視窗 -->
+  <dialog id="deleteDialog" class="confirm-dialog">
+    <form method="dialog">
+      <h3 class="dialog-title">要從書架移除這本手冊嗎？</h3>
+      <p id="deleteDialogMsg" class="dialog-text">移除後僅會清除書架內的副本，不會影響您 iPhone「檔案」App 中的原始 HTML 檔案。</p>
+      <div class="dialog-actions">
+        <button id="cancelDeleteBtn" type="submit" value="cancel" class="btn btn-secondary btn-sm" autofocus>取消</button>
+        <button id="confirmDeleteBtn" type="submit" value="confirm" class="btn btn-danger btn-sm">確認移除</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- 全螢幕離線閱讀器 -->
+  <div id="readerOverlay" class="reader-overlay" hidden>
+    <iframe
+      id="readerFrame"
+      class="reader-frame"
+      title="旅遊手冊閱讀器"
+    ></iframe>
+    <button id="backToShelfBtn" type="button" class="back-to-shelf-btn">
+      📚 回書架
+    </button>
+  </div>
+
+  <!-- 輕量提示 -->
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    (() => {
+      'use strict';
+
+      const DB_NAME = 'TravelBookshelfDB';
+      const DB_VERSION = 1;
+      const STORE_NAME = 'books';
+      const GUIDE_DISMISSED_KEY = 'travel_shelf_ios_guide_dismissed_v1';
+
+      // DOM 元素參照
+      const fileInput = document.getElementById('fileInput');
+      const swStatusPill = document.getElementById('swStatusPill');
+      const installGuide = document.getElementById('installGuide');
+      const closeInstallGuide = document.getElementById('closeInstallGuide');
+      const shelfHeader = document.getElementById('shelfHeader');
+      const shelfCount = document.getElementById('shelfCount');
+      const emptyState = document.getElementById('emptyState');
+      const bookGrid = document.getElementById('bookGrid');
+      const deleteDialog = document.getElementById('deleteDialog');
+      const deleteDialogMsg = document.getElementById('deleteDialogMsg');
+      const cancelDeleteBtn = document.getElementById('cancelDeleteBtn');
+      const readerOverlay = document.getElementById('readerOverlay');
+      const readerFrame = document.getElementById('readerFrame');
+      const backToShelfBtn = document.getElementById('backToShelfBtn');
+      const toastEl = document.getElementById('toast');
+
+      const diagSw = document.getElementById('diagSw');
+      const diagPersist = document.getElementById('diagPersist');
+      const diagCount = document.getElementById('diagCount');
+
+      let pendingDeleteFilename = null;
+      let activeBlobUrl = null;
+      let toastTimer = null;
+
+      function showToast(msg) {
+        toastEl.textContent = msg;
+        toastEl.classList.add('show');
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => toastEl.classList.remove('show'), 2600);
+      }
+
+      // 1. IndexedDB 操作封裝
+      function openDB() {
+        return new Promise((resolve, reject) => {
+          const req = indexedDB.open(DB_NAME, DB_VERSION);
+          req.onupgradeneeded = (e) => {
+            const db = e.target.result;
+            if (!db.objectStoreNames.contains(STORE_NAME)) {
+              db.createObjectStore(STORE_NAME, { keyPath: 'filename' });
+            }
+          };
+          req.onsuccess = () => resolve(req.result);
+          req.onerror = () => reject(req.error);
+        });
+      }
+
+      async function saveBookRecord(record) {
+        const db = await openDB();
+        return new Promise((resolve, reject) => {
+          const tx = db.transaction(STORE_NAME, 'readwrite');
+          tx.objectStore(STORE_NAME).put(record);
+          tx.oncomplete = () => resolve();
+          tx.onerror = () => reject(tx.error);
+        });
+      }
+
+      async function getAllBooks() {
+        const db = await openDB();
+        return new Promise((resolve, reject) => {
+          const tx = db.transaction(STORE_NAME, 'readonly');
+          const req = tx.objectStore(STORE_NAME).getAll();
+          req.onsuccess = () => resolve(req.result || []);
+          req.onerror = () => reject(req.error);
+        });
+      }
+
+      async function deleteBookByFilename(filename) {
+        const db = await openDB();
+        return new Promise((resolve, reject) => {
+          const tx = db.transaction(STORE_NAME, 'readwrite');
+          tx.objectStore(STORE_NAME).delete(filename);
+          tx.oncomplete = () => resolve();
+          tx.onerror = () => reject(tx.error);
+        });
+      }
+
+      // 2. 使用 DOMParser + textContent 安全解析手冊資訊（絕不使用 innerHTML）
+      function parseBookMetadata(filename, htmlString) {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(htmlString, 'text/html');
+
+        // 標題：<title> -> <h1> -> 去除副檔名的檔名
+        const rawTitle = (doc.querySelector('title')?.textContent || '').trim();
+        const rawH1 = (doc.querySelector('h1')?.textContent || '').trim();
+        const fallbackName = filename.replace(/\.(html?|HTML?)$/, '');
+        const title = rawTitle || rawH1 || fallbackName;
+
+        // 摘要：<meta name="description">
+        const metaDesc = doc.querySelector('meta[name="description"]');
+        const summary = (metaDesc?.getAttribute('content') || '').trim() || '點擊開啟完整互動旅遊手冊';
+
+        // 正文前 2000 字
+        const bodyText = (doc.body?.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 2000);
+        const searchCorpus = `${title} ${summary} ${bodyText}`;
+
+        // 正則抓取出發日 (YYYY/MM/DD、YYYY-MM-DD、YYYY.MM.DD)
+        const dateMatch = searchCorpus.match(/(20\d{2})[\/\-\.](0?[1-9]|1[0-2])[\/\-\.](0?[1-9]|[12]\d|3[01])/);
+        let departureISO = null;
+        let departureDisplay = '未標註日期';
+
+        if (dateMatch) {
+          const y = Number(dateMatch[1]);
+          const m = Number(dateMatch[2]);
+          const d = Number(dateMatch[3]);
+          const padM = String(m).padStart(2, '0');
+          const padD = String(d).padStart(2, '0');
+          departureISO = `${y}-${padM}-${padD}`;
+          departureDisplay = `${y}/${padM}/${padD}`;
+        }
+
+        // 關鍵字配色與小圖示
+        let theme = 'yellow';
+        let icon = '🧭';
+        let tagLabel = '自由行';
+
+        if (/山林|健行|登山|步道|百岳|森林|露營|山屋|縱走/.test(searchCorpus)) {
+          theme = 'green';
+          icon = '🌲';
+          tagLabel = '山林健行';
+        } else if (/雪|滑雪|冰|海|沖繩|海邊|潛水|浮潛|島|海灘|溫泉|湖/.test(searchCorpus)) {
+          theme = 'blue';
+          icon = '❄️';
+          tagLabel = '雪海之旅';
+        } else if (/城市|美食|櫻花|東京|大阪|京都|首爾|咖啡|購物|美術館|甜點/.test(searchCorpus)) {
+          theme = 'pink';
+          icon = '🌸';
+          tagLabel = '城市美食';
+        }
+
+        return {
+          filename,
+          title,
+          summary,
+          departureISO,
+          departureDisplay,
+          theme,
+          icon,
+          tagLabel,
+          html: htmlString,
+          updatedAt: Date.now()
+        };
+      }
+
+      // 計算及時倒數標籤
+      function getCountdownStatus(departureISO) {
+        if (!departureISO) {
+          return { label: '隨時出發', sortWeight: 99999999, diffDays: null };
+        }
+
+        const now = new Date();
+        const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const [y, m, d] = departureISO.split('-').map(Number);
+        const tripStart = new Date(y, m - 1, d);
+
+        const diffMs = tripStart.getTime() - todayStart.getTime();
+        const diffDays = Math.round(diffMs / 86400000);
+
+        if (diffDays > 0) {
+          return {
+            label: `還有 ${diffDays} 天出發`,
+            sortWeight: diffDays,
+            diffDays
+          };
+        }
+        if (diffDays === 0) {
+          return {
+            label: '🎉 今天出發',
+            sortWeight: 0,
+            diffDays: 0
+          };
+        }
+        const elapsedDay = Math.abs(diffDays) + 1;
+        if (elapsedDay <= 14) {
+          return {
+            label: `旅程第 ${elapsedDay} 天`,
+            sortWeight: -elapsedDay,
+            diffDays
+          };
+        }
+        return {
+          label: '✨ 回憶收藏',
+          sortWeight: 50000000 + Math.abs(diffDays),
+          diffDays
+        };
+      }
+
+      // 3. 渲染書架卡片（純 DOM API，安全無 XSS）
+      async function renderShelf() {
+        const books = await getAllBooks();
+        diagCount.textContent = `${books.length} 本`;
+
+        if (books.length === 0) {
+          emptyState.hidden = false;
+          shelfHeader.hidden = true;
+          bookGrid.replaceChildren();
+          return;
+        }
+
+        emptyState.hidden = true;
+        shelfHeader.hidden = false;
+        shelfCount.textContent = `共 ${books.length} 本旅遊手冊`;
+
+        // 依出發日期狀態排序（即將出發 -> 旅程中 -> 未標註 -> 回憶收藏）
+        const enriched = books.map((b) => ({
+          ...b,
+          countdown: getCountdownStatus(b.departureISO)
+        }));
+
+        enriched.sort((a, b) => {
+          if (a.countdown.sortWeight !== b.countdown.sortWeight) {
+            return a.countdown.sortWeight - b.countdown.sortWeight;
+          }
+          return b.updatedAt - a.updatedAt;
+        });
+
+        const fragment = document.createDocumentFragment();
+
+        for (const book of enriched) {
+          const card = document.createElement('article');
+          card.className = `book-card theme-${book.theme}`;
+
+          // 頂部色帶
+          const ribbon = document.createElement('div');
+          ribbon.className = 'book-ribbon';
+
+          const categorySpan = document.createElement('span');
+          categorySpan.textContent = `${book.icon} ${book.tagLabel}`;
+
+          const badgeSpan = document.createElement('span');
+          badgeSpan.className = 'countdown-badge';
+          badgeSpan.textContent = book.countdown.label;
+
+          ribbon.append(categorySpan, badgeSpan);
+
+          // 卡片內容
+          const body = document.createElement('div');
+          body.className = 'book-body';
+
+          const titleEl = document.createElement('h3');
+          titleEl.className = 'book-title';
+          titleEl.textContent = book.title;
+
+          const metaEl = document.createElement('div');
+          metaEl.className = 'book-meta';
+          const dateSpan = document.createElement('span');
+          dateSpan.textContent = `📅 ${book.departureDisplay}`;
+          const fileSpan = document.createElement('span');
+          fileSpan.textContent = `📄 ${book.filename}`;
+          metaEl.append(dateSpan, fileSpan);
+
+          const summaryEl = document.createElement('p');
+          summaryEl.className = 'book-summary';
+          summaryEl.textContent = book.summary;
+
+          // 按鈕列
+          const actions = document.createElement('div');
+          actions.className = 'book-actions';
+
+          const readBtn = document.createElement('button');
+          readBtn.type = 'button';
+          readBtn.className = 'btn btn-sm btn-read';
+          readBtn.textContent = '📖 開啟手冊';
+          readBtn.addEventListener('click', () => openBookReader(book));
+
+          const delBtn = document.createElement('button');
+          delBtn.type = 'button';
+          delBtn.className = 'btn btn-secondary btn-sm';
+          delBtn.setAttribute('aria-label', `移除 ${book.title}`);
+          delBtn.textContent = '🗑️';
+          delBtn.addEventListener('click', () => promptDeleteBook(book));
+
+          actions.append(readBtn, delBtn);
+          body.append(titleEl, metaEl, summaryEl, actions);
+          card.append(ribbon, body);
+          fragment.appendChild(card);
+        }
+
+        bookGrid.replaceChildren(fragment);
+      }
+
+      // 4. 多檔匯入處理（相同檔名自動覆蓋更新，新檔名新增）
+      fileInput.addEventListener('change', async (e) => {
+        const files = Array.from(e.target.files || []);
+        if (files.length === 0) return;
+
+        const existing = await getAllBooks();
+        const existingNames = new Set(existing.map((b) => b.filename));
+
+        let addedCount = 0;
+        let updatedCount = 0;
+
+        for (const file of files) {
+          try {
+            const htmlText = await file.text();
+            const parsed = parseBookMetadata(file.name, htmlText);
+            await saveBookRecord(parsed);
+
+            if (existingNames.has(file.name)) {
+              updatedCount++;
+            } else {
+              addedCount++;
+              existingNames.add(file.name);
+            }
+          } catch (err) {
+            console.error('匯入失敗:', file.name, err);
+            showToast(`⚠️ ${file.name} 匯入失敗`);
+          }
+        }
+
+        fileInput.value = '';
+        await renderShelf();
+
+        const msgs = [];
+        if (addedCount > 0) msgs.push(`新增 ${addedCount} 本`);
+        if (updatedCount > 0) msgs.push(`更新 ${updatedCount} 本`);
+        if (msgs.length > 0) {
+          showToast(`✅ 已${msgs.join('、')}旅遊手冊`);
+        }
+      });
+
+      // 5. 原生 <dialog> 刪除確認
+      function promptDeleteBook(book) {
+        pendingDeleteFilename = book.filename;
+        deleteDialogMsg.textContent = `確定要從書架移除「${book.title}」(${book.filename}) 嗎？此操作不會影響您 iPhone「檔案」App 中的原始檔案。`;
+        deleteDialog.showModal();
+        // 確保預設 focus 在取消按鈕
+        requestAnimationFrame(() => cancelDeleteBtn.focus());
+      }
+
+      deleteDialog.addEventListener('close', async () => {
+        if (deleteDialog.returnValue === 'confirm' && pendingDeleteFilename) {
+          await deleteBookByFilename(pendingDeleteFilename);
+          await renderShelf();
+          showToast('🗑️ 已從書架移除手冊');
+        }
+        pendingDeleteFilename = null;
+      });
+
+      // 6. 全螢幕離線閱讀器（優先同源虛擬路由 ./__book__/<檔名>，未啟用 SW 時降級 blob:）
+      function openBookReader(book) {
+        if (activeBlobUrl) {
+          URL.revokeObjectURL(activeBlobUrl);
+          activeBlobUrl = null;
+        }
+
+        const hasActiveController = Boolean(navigator.serviceWorker && navigator.serviceWorker.controller);
+
+        if (hasActiveController) {
+          // 同源虛擬路由：完整保留獨立 CSP、內聯 script 與 localStorage
+          readerFrame.src = `./__book__/${encodeURIComponent(book.filename)}`;
+        } else {
+          // 尚未啟用 SW 時的降級方案
+          const blob = new Blob([book.html], { type: 'text/html;charset=utf-8' });
+          activeBlobUrl = URL.createObjectURL(blob);
+          readerFrame.src = activeBlobUrl;
+        }
+
+        readerOverlay.hidden = false;
+        document.body.style.overflow = 'hidden';
+      }
+
+      backToShelfBtn.addEventListener('click', () => {
+        readerOverlay.hidden = true;
+        readerFrame.src = 'about:blank';
+        document.body.style.overflow = '';
+        if (activeBlobUrl) {
+          URL.revokeObjectURL(activeBlobUrl);
+          activeBlobUrl = null;
+        }
+      });
+
+      // 7. iPhone 加入主畫面教學卡偵測
+      function initInstallGuide() {
+        const isStandalone =
+          window.matchMedia('(display-mode: standalone)').matches ||
+          window.navigator.standalone === true;
+
+        const isDismissed = localStorage.getItem(GUIDE_DISMISSED_KEY) === '1';
+
+        if (!isStandalone && !isDismissed) {
+          installGuide.hidden = false;
+        }
+
+        closeInstallGuide.addEventListener('click', () => {
+          installGuide.hidden = true;
+          localStorage.setItem(GUIDE_DISMISSED_KEY, '1');
+        });
+      }
+
+      // 8. Service Worker 註冊與持久化儲存保護
+      async function initOfflineEngine() {
+        // 申請持久化儲存，避免 iOS Safari 長時間未開啟時自動清理 IndexedDB
+        if (navigator.storage && navigator.storage.persist) {
+          try {
+            const isPersisted = await navigator.storage.persisted();
+            if (!isPersisted) {
+              const granted = await navigator.storage.persist();
+              diagPersist.textContent = granted ? '✅ 已啟用永久保存保護' : '⚠️ 標準儲存（建議加入主畫面以提升保存優先級）';
+            } else {
+              diagPersist.textContent = '✅ 已啟用永久保存保護';
+            }
+          } catch {
+            diagPersist.textContent = 'ℹ️ 瀏覽器不支援查詢';
+          }
+        } else {
+          diagPersist.textContent = 'ℹ️ 瀏覽器不支援 Storage Persist API';
+        }
+
+        if (!('serviceWorker' in navigator)) {
+          swStatusPill.textContent = '⚠️ 此瀏覽器不支援離線快取';
+          diagSw.textContent = '不支援 Service Worker';
+          return;
+        }
+
+        try {
+          const reg = await navigator.serviceWorker.register('./sw.js', { scope: './' });
+
+          const markReady = () => {
+            swStatusPill.textContent = '✅ 已離線就緒';
+            swStatusPill.classList.add('ready');
+            diagSw.textContent = '✅ 運作中（同源虛擬書本路由已啟用）';
+          };
+
+          if (navigator.serviceWorker.controller || reg.active) {
+            markReady();
+          }
+
+          reg.addEventListener('updatefound', () => {
+            const newWorker = reg.installing;
+            if (!newWorker) return;
+            newWorker.addEventListener('statechange', () => {
+              if (newWorker.state === 'activated') {
+                markReady();
+              }
+            });
+          });
+
+          navigator.serviceWorker.addEventListener('controllerchange', markReady);
+        } catch (err) {
+          console.error('SW 註冊失敗:', err);
+          swStatusPill.textContent = '⚠️ 離線引擎未啟用';
+          diagSw.textContent = `註冊失敗 (${err.message})`;
+        }
+      }
+
+      // 啟動應用
+      initInstallGuide();
+      initOfflineEngine();
+      renderShelf();
+    })();
+  </script>
+</body>
+</html>
